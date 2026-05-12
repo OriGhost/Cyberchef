@@ -19,6 +19,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      CYBERCHEF_VERSION: v11.0.0
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -35,20 +37,7 @@ jobs:
           set -euo pipefail
 
           mkdir -p site
-          release_json="$(curl -fsSL https://api.github.com/repos/gchq/CyberChef/releases/latest)"
-          asset_url="$(
-            printf '%s' "$release_json" |
-              jq -r '.assets[]
-                | select(.name | test("^CyberChef_.*\\.zip$"))
-                | .browser_download_url' |
-              head -n 1
-          )"
-
-          if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
-            echo "Could not find a CyberChef release zip asset." >&2
-            exit 1
-          fi
-
+          asset_url="https://github.com/gchq/CyberChef/releases/download/${CYBERCHEF_VERSION}/CyberChef_${CYBERCHEF_VERSION}.zip"
           curl -fL "$asset_url" -o cyberchef.zip
           unzip -q cyberchef.zip -d cyberchef-release
 
