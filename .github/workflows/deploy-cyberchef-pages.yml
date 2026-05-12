@@ -52,18 +52,21 @@ jobs:
           curl -fL "$asset_url" -o cyberchef.zip
           unzip -q cyberchef.zip -d cyberchef-release
 
-          if [ -f cyberchef-release/index.html ]; then
-            site_root="cyberchef-release"
-          else
-            site_root="$(find cyberchef-release -maxdepth 2 -type f -name index.html -printf '%h\n' | head -n 1)"
-          fi
+          index_file="$(
+            find cyberchef-release -type f \
+              \( -name index.html -o -name 'CyberChef*.html' -o -name '*.html' \) |
+              sort |
+              head -n 1
+          )"
 
-          if [ -z "${site_root:-}" ] || [ ! -f "$site_root/index.html" ]; then
-            echo "CyberChef release did not contain index.html." >&2
+          if [ -z "${index_file:-}" ] || [ ! -f "$index_file" ]; then
+            echo "CyberChef release did not contain an HTML entry point." >&2
             exit 1
           fi
 
+          site_root="$(dirname "$index_file")"
           cp -a "$site_root"/. site/
+          cp "$index_file" site/index.html
           touch site/.nojekyll
           test -f site/index.html
 
